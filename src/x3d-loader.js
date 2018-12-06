@@ -47,8 +47,9 @@ module.exports = function (THREE) {
 
 		parse: function (data, scene) {
 
-			var parser = new DOMParser();
-			var scene = new THREE.Scene();
+            var parser = new DOMParser();
+            if(!scene)
+    			scene = new THREE.Scene();
 			var x3dXml = parser.parseFromString(data);
 			renderX3D(THREE, x3dXml, scene);
 

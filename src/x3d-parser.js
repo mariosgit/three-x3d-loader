@@ -193,8 +193,10 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
 
         var currentObject = parent;
 
-        if ('viewpoint' === data.nodeType) {
+        if ('viewpoint' === data.nodeType && data.position) {
             var p = data.position;
+            // console.log('x3d-parser parseChildren', data);
+
             parent.cameraPosition = { x: p.x, y: p.y, z: p.z };
 
             var r = data.orientation;
@@ -245,7 +247,7 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
 
             if (/DEF/.exec(data.string)) {
 
-                currentObject.name = /DEF\s+(\w+)/.exec(data.string)[1];
+                // currentObject.name = /DEF\s+(\w+)/.exec(data.string)[1];
 
                 defines[currentObject.name] = currentObject;
 
@@ -264,19 +266,21 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
             var skyGeometry = new THREE.SphereGeometry(radius, segments, segments);
             var skyMaterial = new THREE.MeshBasicMaterial({ fog: false, side: THREE.BackSide });
 
-            if (data.skyColor.length > 1) {
+            // console.log('x3d-parser parseChildren', data.skyColor);
+            if (data.skyColor) {
+                if (data.skyColor.length > 1) {
 
-                paintFaces(skyGeometry, radius, data.skyAngle, data.skyColor, true);
+                    paintFaces(skyGeometry, radius, data.skyAngle, data.skyColor, true);
 
-                skyMaterial.vertexColors = THREE.VertexColors
+                    skyMaterial.vertexColors = THREE.VertexColors
 
-            } else {
+                } else {
 
-                var color = data.skyColor[0];
-                skyMaterial.color.setRGB(color.r, color.b, color.g);
+                    var color = data.skyColor[0];
+                    skyMaterial.color.setRGB(color.r, color.b, color.g);
 
+                }
             }
-
             scene.add(new THREE.Mesh(skyGeometry, skyMaterial));
 
             // ground (half sphere):
@@ -296,7 +300,14 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
 
         } else if (/geometry/.exec(data.string)) {
 
-            if ('box' === data.nodeType) {
+            if ('externalgeometry' === data.nodeType) {
+                url = data.url;
+                url = url.replace('"', '');
+                url = url.replace('"', '');
+                console.log('x3d-parser parseChildren externalgeometry', url, parent.type, parent.id);
+                parent.name = url;
+
+            } else if ('box' === data.nodeType) {
 
                 var s = data.size;
                 if (s) {
@@ -530,6 +541,33 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
             return;
 
         }
+        else if (/touchablegroup/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/switch/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/route/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/field/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/touchsensor/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/colortransformmatrix/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/navigationinfo/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else if (/cameraviewpoint/.exec(data.string)) {
+            // console.log('x3d-parser unhandled node', data.string);
+        }
+        else {
+            console.log('x3d-parser unhandled node', data.string);
+        }
 
         for (var i = 0, l = data.children.length; i < l; i++) {
 
@@ -558,7 +596,8 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
     var parseChildren = function (parentNode, parentResult) {
         for (var i = 0; i < parentNode.childNodes.length; i++) {
             var currentNode = parentNode.childNodes[i];
-            if (currentNode.nodeType !== 3) {
+            // console.log('x3d-parser parseChildren', currentNode);
+            if (currentNode && currentNode.nodeType !== 3 && currentNode.attributes) {
                 var nodeAttr = currentNode.attributes[0] || {}
                 var newChild = {
                     'nodeType': currentNode.nodeName.toLocaleLowerCase(),
