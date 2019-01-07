@@ -1,10 +1,12 @@
-function renderX3D(THREE, x3dXml, scene, useImageTexture) {
+function renderX3D(THREE, x3dXml, scene, useImageTexture, baseUrl) {
     useImageTexture = useImageTexture === false ? false : true;
     scene = scene || new THREE.Scene();
     var defines = {};
     var float_pattern = /(\b|\-|\+)([\d\.e]+)/;
     var float2_pattern = /([\d\.\+\-e]+)\s+([\d\.\+\-e]+)/g;
     var float3_pattern = /([\d\.\+\-e]+)\s+([\d\.\+\-e]+)\s+([\d\.\+\-e]+)/g;
+
+    var baseUrl = baseUrl || '';
 
     /**
      * Interpolates colors a and b following their relative distance
@@ -304,7 +306,7 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
                 url = data.url;
                 url = url.replace('"', '');
                 url = url.replace('"', '');
-                console.log('x3d-parser parseChildren externalgeometry', url, parent.type, parent.id);
+                // console.log('x3d-parser parseChildren externalgeometry', url, parent.type, parent.id);
                 parent.name = url;
 
             } else if ('box' === data.nodeType) {
@@ -529,11 +531,23 @@ function renderX3D(THREE, x3dXml, scene, useImageTexture) {
 
                 if ('imagetexture' === child.nodeType && useImageTexture) {
                     //var tex = THREE.ImageUtils.loadTexture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABYSURBVDhPxc9BCsAgDERRj96j9WZpyI+CYxCKlL6VJfMXbfbSX8Ed8mOmAdMr8M5DNwVj2gJvaYqANXbBuoY0B4FbG1m7s592fh4Z7zx0GqCcog42vg7MHh1jhetTOqUmAAAAAElFTkSuQmCC");
-                    var tex = THREE.ImageUtils.loadTexture(child.url);
-                    tex.wrapS = THREE.RepeatWrapping;
-                    tex.wrapT = THREE.RepeatWrapping;
+                    if (child.url) {
 
-                    parent.material.map = tex;
+                        var url = child.url;
+                        url = url.replace('"', '');
+                        url = url.replace('"', '');
+
+                        // baseUrl
+                        let superurl = [baseUrl, url];
+                        var tex = THREE.ImageUtils.loadTexture(superurl.join('/'));
+                        tex.wrapS = THREE.ClampToEdgeWrapping;
+                        tex.wrapT = THREE.ClampToEdgeWrapping;
+                        tex.flipY = false;
+                        parent.material.map = tex;
+                        // console.log('xml-parser:imagetexture: url:', superurl.join('/'), parent.material);
+                    } else {
+                        // console.log('xml-parser:imagetexture: no url ???:', child);
+                    }
                 }
 
             }

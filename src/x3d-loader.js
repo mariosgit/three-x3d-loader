@@ -45,13 +45,13 @@ module.exports = function (THREE) {
 
 		},
 
-		parse: function (data, scene) {
+		parse: function (data, scene, baseurl) {
 
             var parser = new DOMParser();
             if(!scene)
     			scene = new THREE.Scene();
-			var x3dXml = parser.parseFromString(data);
-			renderX3D(THREE, x3dXml, scene);
+            var x3dXml = parser.parseFromString(data);
+			renderX3D(THREE, x3dXml, scene, true, baseurl);
 
 			return scene;
 		}
